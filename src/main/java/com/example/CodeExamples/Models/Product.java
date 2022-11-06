@@ -1,17 +1,15 @@
 package com.example.CodeExamples.Models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "products")
 @Getter
 @Setter
-@AllArgsConstructor
 @EqualsAndHashCode
+@ToString
+@NoArgsConstructor
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -26,6 +24,10 @@ public class Product {
     @Column(name = "price")
     private Double price;
 
-
+    public Product(String name, String description, Double price) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+    }
 
 }
