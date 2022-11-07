@@ -10,6 +10,8 @@ import lombok.*;
 @EqualsAndHashCode
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

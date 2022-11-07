@@ -1,7 +1,10 @@
 package com.example.CodeExamples.Controllers;
 
+import com.example.CodeExamples.DTOs.ProductCreateDto;
+import com.example.CodeExamples.DTOs.ProductResponseDto;
 import com.example.CodeExamples.Models.Product;
 import com.example.CodeExamples.Repositories.ProductRepository;
+import com.example.CodeExamples.Services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,61 +19,48 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:8081")
 public class ProductController {
 
-    @Autowired
-    ProductRepository productRepository;
 
+    ProductService _productService;
+
+    @Autowired
+    public ProductController(ProductService productService) {
+        this._productService = productService;
+    }
 
     @GetMapping("/products")
-    public ResponseEntity<List<Product>> getAllProducts(@RequestParam(required = false) String productName) {
+    public ResponseEntity<List<ProductResponseDto>> getAllProducts(@RequestParam(required = false) String filters) {
         try {
-            List<Product> products = new ArrayList<Product>();
+            List<ProductResponseDto> products = new ArrayList<>();
 
-            if (productName == null)
-                productRepository.findAll().forEach(products::add);
-            else
-                productRepository.findByNameContaining(productName).forEach(products::add);
-
+            if (filters == null)
+                products = _productService.getProducts();
+            else {
+                products = _productService.getProductsByFilters(filters);
+            }
             if (products.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
             return new ResponseEntity<>(products, HttpStatus.OK);
         } catch (Exception e) {
-            System.out.println("Exception is " +  e.getMessage());
+            System.out.println("Exception is " + e.getMessage());
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/products/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable("id") long id) {
-        Optional<Product> tutorialData = productRepository.findById(id);
-
-        if (tutorialData.isPresent()) {
-            return new ResponseEntity<>(tutorialData.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<ProductResponseDto> getProductById(@PathVariable("id") long id) {
+        Optional<ProductResponseDto> productDto = _productService.getProductById(id);
+        return productDto.map(productResponseDto ->
+                        new ResponseEntity<>(productResponseDto, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @GetMapping("/products/filtered")
-    public ResponseEntity<List<Product>> findByPrice(@RequestParam(required = true) Double price) {
-        try {
-            List<Product> products = productRepository.findByPrice(price);
-
-            if (products.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-            return new ResponseEntity<>(products, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 
     @PostMapping("/products")
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+    public ResponseEntity<ProductResponseDto> createProduct(@RequestBody ProductCreateDto product) {
         try {
-            Product createdProduct =productRepository
-                    .save(new Product(product.getName(), product.getDescription(), product.getPrice()));
+            ProductResponseDto createdProduct = _productService.createProduct(product);
             return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -78,15 +68,11 @@ public class ProductController {
     }
 
     @PutMapping("/products/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable("id") long id, @RequestBody Product product) {
-        Optional<Product> tutorialData = productRepository.findById(id);
+    public ResponseEntity<ProductResponseDto> updateProduct(@PathVariable("id") long id, @RequestBody ProductCreateDto product) {
 
-        if (tutorialData.isPresent()) {
-            Product updatedProduct = tutorialData.get();
-            updatedProduct.setName(product.getName());
-            updatedProduct.setDescription(product.getDescription());
-            updatedProduct.setPrice(product.getPrice());
-            return new ResponseEntity<>(productRepository.save(updatedProduct), HttpStatus.OK);
+        Optional<ProductResponseDto> productResponse = _productService.updateProduct(id, product);
+        if (productResponse.isPresent()) {
+            return new ResponseEntity<>(productResponse.get(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -94,22 +80,24 @@ public class ProductController {
 
     @DeleteMapping("/products/{id}")
     public ResponseEntity<HttpStatus> deleteProduct(@PathVariable("id") long id) {
-        try {
-            productRepository.deleteById(id);
+
+        boolean result = _productService.deleteProductById(id);
+        if (result)
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+
     }
 
     @DeleteMapping("/products")
     public ResponseEntity<HttpStatus> deleteAllProducts() {
-        try {
-            productRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
 
+        boolean result = _productService.deleteAllProducts();
+        if (result)
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
 }
