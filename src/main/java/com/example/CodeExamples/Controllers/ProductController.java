@@ -43,10 +43,10 @@ public class ProductController {
 
     @GetMapping("/products/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable("id") long id) {
-        Optional<Product> tutorialData = productRepository.findById(id);
+        Optional<Product> productData = productRepository.findById(id);
 
-        if (tutorialData.isPresent()) {
-            return new ResponseEntity<>(tutorialData.get(), HttpStatus.OK);
+        if (productData.isPresent()) {
+            return new ResponseEntity<>(productData.get(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -79,10 +79,10 @@ public class ProductController {
 
     @PutMapping("/products/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable("id") long id, @RequestBody Product product) {
-        Optional<Product> tutorialData = productRepository.findById(id);
+        Optional<Product> productData = productRepository.findById(id);
 
-        if (tutorialData.isPresent()) {
-            Product updatedProduct = tutorialData.get();
+        if (productData.isPresent()) {
+            Product updatedProduct = productData.get();
             updatedProduct.setName(product.getName());
             updatedProduct.setDescription(product.getDescription());
             updatedProduct.setPrice(product.getPrice());
