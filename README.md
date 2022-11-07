@@ -19,6 +19,7 @@ The 'good' code has the following benefits/ good practises followed:
 6)no unnecessary endpoints
 7) the controllers are only used for receiving and returning information
 8) the repositories are only used for getting information from database
+9) no floating strings are present in the code. Application uses a central utility file for constants.
 
 Ways in which the 'good' code can ge enhanced/made better
 1) Custom exception can be used to return more user friendly information/ error message
